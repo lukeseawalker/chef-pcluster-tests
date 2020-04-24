@@ -69,6 +69,8 @@ parse_options() {
 }
 
 check() {
+    mkdir log-files
+
     [[ -z "${_versions}" ]] && fail "Parameter --versions cannot be empty"
     IFS=',' read -r -a _versions_array <<< "${_versions}"
 
