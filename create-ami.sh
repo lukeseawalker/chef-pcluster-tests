@@ -6,11 +6,15 @@ fail() {
 }
 
 log() {
-    echo "INFO : $1"
+    echo "INFO: $1"
 }
 
 log_error() {
-    echo "ERROR : $1"
+    echo "ERROR: $1"
+}
+
+log_ok() {
+    echo "OK: $1"
 }
 
 parse_options() {
@@ -89,18 +93,18 @@ do
     _virtual_env="pcluster-virtual-env-${VERSION}-$$"
     _python_version="${_pythonversion}"
 
-    echo "Create virtualenv (${_virtual_env})"
+    log "Creating virtualenv (${_virtual_env})"
     [[ ":$PATH:" != *":/usr/local/bin/.pyenv/bin:"* ]] && PATH="/usr/local/bin/.pyenv/bin:${PATH}"
     eval "$(pyenv init -)" && eval "$(pyenv virtualenv-init -)"
 
     if [ $(pyenv virtualenvs | egrep -c -e "^ *${_virtual_env} ") -eq 1 ]; then
-        pyenv virtualenv-delete -f ${_virtual_env}
+        pyenv virtualenv-delete -f ${_virtual_env} >/dev/null
     fi
-    pyenv virtualenv ${_python_version} ${_virtual_env}
-    pyenv activate ${_virtual_env}
+    pyenv virtualenv ${_python_version} ${_virtual_env} >/dev/null
+    pyenv activate ${_virtual_env} >/dev/null
 
-    pip install aws-parallelcluster==${VERSION}
-    pip install Jinja2
+    pip install aws-parallelcluster==${VERSION} >/dev/null
+    pip install Jinja2 >/dev/null
 
     for REGION in "${_regions_array[@]}"
     do
@@ -129,18 +133,21 @@ do
 
             [[ -z ${base_ami} ]] && fail "Base AMI is could not be retrieved"
 
-            pcluster createami -ai ${base_ami}  -os ${OS} -r ${REGION} ${_custom_bookbook} | tee log-files/createami.${OS}.${REGION}.${base_ami}.log
-
-            if [[ $? -ne 0 ]]; then
-                log_error "PCluster AMI not built"
+            log "Executing pcluster createami -ai ${base_ami} -os ${OS} -r ${REGION} ${_custom_bookbook}"
+            pcluster createami -ai ${base_ami} -os ${OS} -r ${REGION} ${_custom_bookbook} > log-files/createami.${OS}.${REGION}.${base_ami}.log
+            _exit_code=$?
+            if [[ ${_exit_code} -ne 0 ]]; then
+                log_error "PCluster AMI not built for ${OS} in ${REGION} using base AMI ${base_ami}"
+            else
+                log_ok "PCluster AMI built for ${OS} in ${REGION} using base AMI ${base_ami}"
             fi
 
         done
     done
 
-    echo "Delete virtualenv (${_virtual_env})"
-    pyenv deactivate
-    pyenv virtualenv-delete -f ${_virtual_env}
+    log "Delete virtualenv (${_virtual_env})"
+    pyenv deactivate >/dev/null
+    pyenv virtualenv-delete -f ${_virtual_env} >/dev/null
 done
 }
 
