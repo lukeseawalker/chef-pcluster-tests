@@ -1,0 +1,23 @@
+[global]
+cluster_template = default
+sanity_check = true
+
+[aws]
+aws_region_name = {{ version }}
+
+[cluster default]
+key_name = carrogu-us-east-1
+vpc_settings = us-east-1
+master_instance_type = c5.2xlarge
+compute_instance_type = c5.2xlarge
+base_os = alinux
+scheduler = slurm
+initial_queue_size = 0
+max_queue_size = 1
+template_url = https://aws-parallelcluster-dev-commercial-test.s3.amazonaws.com/templates/aws-parallelcluster-{{ version }}.cfn.json
+extra_json = { "cluster" : { "skip_install_recipes" : "no" } }
+custom_ami = ami-0915e09cc7ceee3ab
+
+[vpc us-east-1]
+vpc_id = vpc-4c5a312a
+master_subnet_id = subnet-a827aacd
