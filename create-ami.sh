@@ -106,7 +106,7 @@ do
     do
         for OS in "${_oss_array[@]}"
         do
-            case "$OS" in
+            case "${OS}" in
                 alinux)
                     base_ami=$(aws ec2 describe-images --owners amazon --filters "Name=name,Values=amzn-ami-hvm-*.*.*.*-x86_64-gp2" --query 'reverse(sort_by(Images, &CreationDate))[:1].ImageId' --output text)
                 ;;
@@ -127,10 +127,11 @@ do
                 ;;
             esac
 
-            pcluster createami -ai ${base_ami}  -os $OS -r ${REGION} ${_custom_bookbook} | tee log-files/createami.$OS.${REGION}.${base_ami}.log
-            log
+            [[ -z ${base_ami} ]] && fail "Base AMI is could not be retrieved"
 
-            if [ $? -ne 0 ]; then
+            pcluster createami -ai ${base_ami}  -os ${OS} -r ${REGION} ${_custom_bookbook} | tee log-files/createami.${OS}.${REGION}.${base_ami}.log
+
+            if [[ $? -ne 0 ]]; then
                 log_error "PCluster AMI not built"
             fi
 
